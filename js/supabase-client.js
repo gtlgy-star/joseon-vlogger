@@ -102,6 +102,21 @@
     return rows.map((project) => ({ ...project, confirm_count: counts.get(project.id) || 0, confirmed_by_me: mine.has(project.id) }));
   }
 
+  async function listProjectCountsByClass() {
+    await sessionForDb('COUNT');
+    const { data, error } = await getClient()
+      .from('projects')
+      .select('class_number')
+      .or('diary_shared.eq.true,storyboard_shared.eq.true');
+    if (error) throwDbError('COUNT', error);
+    const counts = Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((number) => [number, 0]));
+    (data || []).forEach((project) => {
+      const classNumber = Number(project.class_number);
+      if (classNumber >= 1 && classNumber <= 7) counts[classNumber] += 1;
+    });
+    return counts;
+  }
+
   async function setProjectConfirmed(projectId, confirmed) {
     const session = await sessionForDb(confirmed ? 'CONFIRM' : 'UNCONFIRM');
     if (confirmed) {
@@ -126,5 +141,5 @@
     return changes;
   }
 
-  window.JoseonSupabase = { isConfigured, ensureSession, currentUserId, upsertProject, listProjects, setProjectConfirmed, updateSharing };
+  window.JoseonSupabase = { isConfigured, ensureSession, currentUserId, upsertProject, listProjects, listProjectCountsByClass, setProjectConfirmed, updateSharing };
 })();

@@ -7,9 +7,10 @@
   let projects = [];
   let currentUserId = '';
   let visibleCount = 8;
+  let classCounts = Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((number) => [number, 0]));
 
   function shell(content) {
-    return `<div class="gallery-shell"><header class="gallery-header"><div><span>5학년 사회</span><h1>🏛 조선 브이로거 작품관</h1><p>풍무초등학교 친구들이 만든 조선 시대의 하루를 감상해 보세요.</p></div><button id="gallery-close" class="secondary-button" type="button">내 작품으로 돌아가기</button></header><nav class="gallery-class-tabs" aria-label="반 선택">${[1,2,3,4,5,6,7].map((number) => `<button type="button" data-gallery-class="${number}" class="${number === activeClass ? 'active' : ''}">${number}반</button>`).join('')}</nav><main class="gallery-content">${content}</main></div>`;
+    return `<div class="gallery-shell"><header class="gallery-header"><div><span>5학년 사회</span><h1>🏛 조선 브이로거 작품관</h1><p>풍무초등학교 친구들이 만든 조선 시대의 하루를 감상해 보세요.</p></div><button id="gallery-close" class="secondary-button" type="button">내 작품으로 돌아가기</button></header><nav class="gallery-class-tabs" aria-label="반 선택">${[1,2,3,4,5,6,7].map((number) => `<button type="button" data-gallery-class="${number}" class="${number === activeClass ? 'active' : ''}">${number}반(${classCounts[number] || 0}작품 수록)</button>`).join('')}</nav><main class="gallery-content">${content}</main></div>`;
   }
 
   function bindNavigation() {
@@ -138,7 +139,10 @@
     renderMessage('loading');
     try {
       currentUserId = await window.JoseonSupabase.currentUserId();
-      projects = await window.JoseonSupabase.listProjects(activeClass, 'all', 32);
+      [projects, classCounts] = await Promise.all([
+        window.JoseonSupabase.listProjects(activeClass, 'all', 32),
+        window.JoseonSupabase.listProjectCountsByClass()
+      ]);
       renderCards();
     } catch (_) { renderMessage('error'); }
   }
