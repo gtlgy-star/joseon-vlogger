@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#147ea6">
+  <title>나도 조선 브이로거</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#dfecee}
+    #tablet-app{position:fixed;width:1280px;height:800px;border:0;transform-origin:top left;background:#eef5f5}
+  </style>
+</head>
+<body>
+  <iframe id="tablet-app" src="index.html?tablet_canvas=1" title="나도 조선 브이로거"></iframe>
+  <script>
+    (function () {
+      'use strict';
+      const frame = document.getElementById('tablet-app');
+      const canvasWidth = 1280;
+      const canvasHeight = 800;
+
+      function fitCanvas() {
+        const scale = Math.min(window.innerWidth / canvasWidth, window.innerHeight / canvasHeight);
+        frame.style.left = `${Math.max(0, (window.innerWidth - canvasWidth * scale) / 2)}px`;
+        frame.style.top = `${Math.max(0, (window.innerHeight - canvasHeight * scale) / 2)}px`;
+        frame.style.transform = `scale(${scale})`;
+      }
+
+      fitCanvas();
+      window.addEventListener('resize', fitCanvas);
+      window.addEventListener('orientationchange', fitCanvas);
+      window.history.replaceState(null, '', new URL('./', window.location.href).pathname);
+    })();
+  </script>
+</body>
+</html>
