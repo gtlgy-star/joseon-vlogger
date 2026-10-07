@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#147ea6">
+  <title>나도 조선 브이로거</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#app">본문 바로가기</a>
+  <header class="top-banner" aria-label="나도 조선 브이로거">
+      <img src="assets/images/joseon-main-banner.png" alt="나도 조선 브이로거, 5학년 사회 수업용 일기">
+  </header>
+  <div class="activity-bar">
+    <button id="reset-open" class="reset-button" type="button">처음부터 다시 시작</button>
+    <nav id="progress" class="progress" aria-label="학습 단계"></nav>
+    <button id="gallery-open" class="gallery-open-button" type="button"><span aria-hidden="true">🏛</span><strong>작품관</strong></button>
+  </div>
+  <main id="app" tabindex="-1"></main>
+  <section id="inquiry-gate" class="inquiry-gate" role="dialog" aria-modal="true" aria-labelledby="inquiry-arrival" hidden>
+    <button id="inquiry-scroll" class="inquiry-scroll" type="button" aria-expanded="false" aria-controls="inquiry-question">
+      <span class="scroll-rod scroll-rod-top" aria-hidden="true"></span>
+      <span class="scroll-paper">
+        <span class="scroll-seal" aria-hidden="true">탐구질문</span>
+        <span id="inquiry-question" class="inquiry-question">
+          <small>오늘의 탐구질문</small>
+          <strong><span>유교의 가르침이 퍼지면서</span><span>조선 사람들의 생활은 어떻게 달라졌을까?</span></strong>
+        </span>
+      </span>
+      <span class="scroll-rod scroll-rod-bottom" aria-hidden="true"></span>
+    </button>
+    <p id="inquiry-arrival" class="inquiry-arrival">탐구질문이 도착했어요.</p>
+    <p class="inquiry-hint">가운데 족자를 눌러 확인하세요.</p>
+    <button id="inquiry-start" class="inquiry-start" type="button" disabled>활동 시작 <span aria-hidden="true">→</span></button>
+  </section>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="reset-dialog">
+    <div class="dialog-art" aria-hidden="true">↺</div>
+    <h2>처음부터 다시 시작할까요?</h2>
+    <p>작성한 내용이 모두 지워집니다.<br>지운 내용은 다시 되돌릴 수 없어요.</p>
+    <div class="dialog-actions"><button id="reset-cancel" class="secondary-button">취소</button><button id="reset-confirm" class="danger-button">다시 시작</button></div>
+  </dialog>
+  <dialog id="share-dialog" class="share-dialog">
+    <form method="dialog" class="share-dialog-card">
+      <button class="dialog-close" value="cancel" aria-label="닫기">×</button>
+      <span class="share-dialog-icon" aria-hidden="true">📌</span>
+      <h2>우리 모둠 작품 공유하기</h2>
+      <label for="share-title">작품 제목</label>
+      <input id="share-title" maxlength="60" autocomplete="off">
+      <p class="share-group-summary" id="share-group-summary"></p>
+      <fieldset>
+        <legend>공유할 결과물을 선택하세요.</legend>
+        <label><input id="share-diary-check" type="checkbox" checked> <span>📜 일기</span></label>
+        <label><input id="share-storyboard-check" type="checkbox" checked> <span>🎬 영상일기 스토리보드</span></label>
+      </fieldset>
+      <p id="share-error" class="error show" role="alert"></p>
+      <div id="share-success" class="share-success" hidden>
+        <strong>✅ 우리 모둠 작품을 작품관에 등록했어요.</strong>
+      </div>
+      <div class="dialog-actions share-dialog-actions">
+        <button id="share-cancel" class="secondary-button" value="cancel">취소</button>
+        <button id="share-submit" class="primary-button" type="button">우리 반 작품관에 공유하기</button>
+      </div>
+    </form>
+  </dialog>
+  <section id="gallery-layer" class="gallery-layer" aria-label="작품관" hidden></section>
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/storyboard.js"></script>
+  <script src="js/backgrounds.js"></script>
+  <script src="js/props.js"></script>
+  <script src="js/lifestyles.js"></script>
+  <script src="js/preview.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/gallery.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

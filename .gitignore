@@ -1,0 +1,49 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and package-manager output
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Logs
+*.log
+logs/
+
+# QA, review, and temporary work
+tmp/
+tmp-*/
+.tmp-*/
+tmp-storyboard-qa/
+tmp-site-review/
+*-qa.png
+qa-*.png
+screenshot*.png
+desktop.png
+dialogue-editor.png
+dialogue-preview.png
+life-scene.png
+speaker-editor.png
+speaker-preview.png
+
+# Browser profiles
+edge-profile/
+**/edge-profile/
+**/browser-profile/
+**/*-profile/
+
+# Test recordings and reference materials
+joseon-vlogger-preview-example.webm
+references/
+assets/props/source-sheets/
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
