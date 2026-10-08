@@ -949,6 +949,47 @@
       app.querySelector('.screen-header h1').textContent = options.project?.title || '공유 작품 감상';
       app.querySelector('.screen-header p').innerHTML = `<strong>작품 정보</strong>${esc(options.project?.display_name || '우리 모둠')} · ${esc(options.project?.class_number || '')}반`;
       [editDiaryButton, editStoryboardButton, document.getElementById('share-diary-result'), shareStoryboardButton].forEach((button) => { button.hidden = true; });
+      const recommendButtons = [
+        document.querySelector('#diary-result-panel .result-action-stack'),
+        storyboardActionStack
+      ].map((container) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'shared-recommend-button';
+        button.setAttribute('aria-pressed', String(Boolean(options.project?.confirmed_by_me)));
+        container.append(button);
+        return button;
+      });
+      const updateRecommendButtons = () => {
+        const confirmed = Boolean(options.project?.confirmed_by_me);
+        const count = Math.max(0, Number(options.project?.confirm_count) || 0);
+        recommendButtons.forEach((button) => {
+          button.classList.toggle('is-recommended', confirmed);
+          button.setAttribute('aria-pressed', String(confirmed));
+          button.textContent = options.project?.is_own
+            ? `👍 내 작품 추천 ${count}`
+            : `${confirmed ? '👍 추천했어요' : '👍 추천해요'} ${count}`;
+          button.disabled = Boolean(options.project?.is_own);
+          button.title = options.project?.is_own ? '내 작품은 추천할 수 없어요.' : (confirmed ? '추천 취소' : '이 작품을 추천해요');
+        });
+      };
+      const toggleRecommendation = async () => {
+        if (!options.project || options.project.is_own) return;
+        const nextConfirmed = !options.project.confirmed_by_me;
+        recommendButtons.forEach((button) => { button.disabled = true; });
+        try {
+          await window.JoseonSupabase.setProjectConfirmed(options.project.id, nextConfirmed);
+          options.project.confirmed_by_me = nextConfirmed;
+          options.project.confirm_count = Math.max(0, (Number(options.project.confirm_count) || 0) + (nextConfirmed ? 1 : -1));
+          updateRecommendButtons();
+          notify(nextConfirmed ? '이 작품을 추천했어요.' : '추천을 취소했어요.');
+        } catch (_) {
+          updateRecommendButtons();
+          notify('추천을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+        }
+      };
+      recommendButtons.forEach((button) => button.addEventListener('click', toggleRecommendation));
+      updateRecommendButtons();
       if (!options.project?.diary_shared) { diaryTab.hidden = true; diaryPanel.hidden = true; }
       if (!options.project?.storyboard_shared) { storyboardTab.hidden = true; storyboardPanel.hidden = true; }
       previewBackButton.textContent = '← 작품관으로';

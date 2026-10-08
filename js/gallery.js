@@ -101,7 +101,7 @@
     const groupName = /^\d+$/.test(displayName) ? `${displayName}모둠` : (displayName || '우리 모둠');
     const count = Math.max(0, Number(project.confirm_count) || 0);
     const confirmed = Boolean(project.confirmed_by_me);
-    const confirmButton = `<button type="button" class="gallery-confirm-button${confirmed ? ' is-confirmed' : ''}${own ? ' is-own-count' : ''}" ${own ? 'disabled aria-disabled="true" title="내 작품의 확인 수"' : `data-confirm="${esc(project.id)}" data-confirmed="${confirmed}" aria-pressed="${confirmed}" title="${confirmed ? '확인 취소' : '이 작품을 확인했어요'}"`}><span aria-hidden="true">☝️</span><small>확인</small><strong>${count}</strong></button>`;
+    const confirmButton = `<button type="button" class="gallery-confirm-button${confirmed ? ' is-confirmed' : ''}${own ? ' is-own-count' : ''}" ${own ? 'disabled aria-disabled="true" title="내 작품의 추천 수"' : `data-confirm="${esc(project.id)}" data-confirmed="${confirmed}" aria-pressed="${confirmed}" title="${confirmed ? '추천 취소' : '이 작품을 추천해요'}"`}><span aria-hidden="true">👍</span><small>추천</small><strong>${count}</strong></button>`;
     const manageActions = own ? `<div class="gallery-owner-actions"><button type="button" class="gallery-edit-button" data-edit="${esc(project.id)}">수정</button><button type="button" class="gallery-delete-button" data-delete-project="${esc(project.id)}">삭제</button></div>` : '';
     return `<article class="gallery-card${own ? ' is-own' : ''}" data-project-id="${esc(project.id)}"><button class="gallery-card-poster" type="button" data-preview="${esc(project.id)}" data-preview-type="${posterType}" aria-label="${esc(project.title || '제목 없는 작품')} ${posterType === 'storyboard' ? '스토리보드' : '일기'} 미리보기">${renderThumbnail(project)}</button>${confirmButton}<div class="gallery-card-details"><h2>${esc(project.title || '제목 없는 작품')}</h2><p>${esc(groupName)}</p><div class="gallery-card-actions">${diaryAction}${storyboardAction}</div>${manageActions}</div></article>`;
   }
@@ -111,7 +111,10 @@
     const moreButton = projects.length > visibleCount ? `<div class="gallery-more-wrap"><button id="gallery-more" class="secondary-button" type="button">작품 더 보기 (${projects.length - visibleCount})</button></div>` : '';
     layer().innerHTML = shell(projects.length ? `<div class="gallery-grid">${visibleProjects.map(card).join('')}</div>${moreButton}` : '<div class="gallery-message"><span>🖼️</span><strong>아직 공유된 작품이 없어요.</strong><p>우리 모둠의 첫 작품을 공유해 보세요!</p></div>');
     bindNavigation();
-    layer().querySelectorAll('[data-preview]').forEach((button) => button.addEventListener('click', () => hooks.onPreview?.(projects.find((project) => project.id === button.dataset.preview), button.dataset.previewType)));
+    layer().querySelectorAll('[data-preview]').forEach((button) => button.addEventListener('click', () => {
+      const project = projects.find((item) => item.id === button.dataset.preview);
+      if (project) hooks.onPreview?.({ ...project, is_own: project.owner_id === currentUserId }, button.dataset.previewType);
+    }));
     layer().querySelectorAll('[data-edit]').forEach((button) => button.addEventListener('click', () => {
       const project = projects.find((item) => item.id === button.dataset.edit);
       if (!project || project.owner_id !== currentUserId) return;
@@ -146,11 +149,11 @@
         project.confirm_count = Math.max(0, (Number(project.confirm_count) || 0) + (nextConfirmed ? 1 : -1));
         button.dataset.confirmed = String(nextConfirmed);
         button.setAttribute('aria-pressed', String(nextConfirmed));
-        button.title = nextConfirmed ? '확인 취소' : '이 작품을 확인했어요';
+        button.title = nextConfirmed ? '추천 취소' : '이 작품을 추천해요';
         button.classList.toggle('is-confirmed', nextConfirmed);
         button.querySelector('strong').textContent = String(project.confirm_count);
       } catch (_) {
-        hooks.onNotify?.('확인 표시를 저장하지 못했어요.');
+        hooks.onNotify?.('추천을 저장하지 못했어요.');
       } finally {
         button.disabled = false;
       }

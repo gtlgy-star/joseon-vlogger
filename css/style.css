@@ -1618,6 +1618,7 @@ body.inquiry-locked main{
 .share-result-button::before{content:"";position:absolute;z-index:-1;top:-70%;left:-18%;width:36%;height:240%;transform:rotate(24deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent)}
 .share-result-button:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 9px 22px rgba(68,50,105,.38),inset 0 1px 0 rgba(255,255,255,.35)}
 .share-result-button:focus-visible{outline:3px solid rgba(226,187,85,.48);outline-offset:2px}
+.shared-recommend-button{border:2px solid #e0b744;background:linear-gradient(135deg,#fff8cf,#f3d86e);color:#594516;font-size:17px;font-weight:950;box-shadow:0 6px 15px rgba(121,91,24,.2)}.shared-recommend-button:hover{filter:brightness(1.03);transform:translateY(-1px)}.shared-recommend-button.is-recommended{border-color:#d9a91f;background:linear-gradient(135deg,#f6d94d,#e9b832);color:#47350b}.shared-recommend-button:disabled{cursor:default;filter:saturate(.55);opacity:.75;transform:none}
 @media(max-width:699px){.result-preview-tab{min-width:0;white-space:normal}}
 .diary-result-background{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;object-position:center}
 .diary-result-character{left:var(--diary-character-x,22%);bottom:var(--diary-character-bottom,0%);height:var(--diary-character-height,88%);max-width:var(--diary-character-max-width,48%);transform:translateX(-50%)}
