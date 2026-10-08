@@ -55,25 +55,29 @@ create table if not exists public.project_confirms (
 
 alter table public.project_confirms enable row level security;
 
+revoke all on table public.project_confirms from anon;
 grant select, insert, delete on table public.project_confirms to authenticated;
 
 drop policy if exists "작품 확인 읽기" on public.project_confirms;
-create policy "작품 확인 읽기" on public.project_confirms for select to authenticated
+drop policy if exists "작품 추천 읽기" on public.project_confirms;
+create policy "작품 추천 읽기" on public.project_confirms for select to authenticated
   using (true);
 
 drop policy if exists "작품 확인 추가" on public.project_confirms;
-create policy "작품 확인 추가" on public.project_confirms for insert to authenticated
+drop policy if exists "작품 추천 추가" on public.project_confirms;
+create policy "작품 추천 추가" on public.project_confirms for insert to authenticated
   with check (
-    user_id = auth.uid()
+    user_id = (select auth.uid())
     and exists (
       select 1 from public.projects
       where projects.id = project_confirms.project_id
-        and projects.owner_id <> auth.uid()
+        and (projects.diary_shared = true or projects.storyboard_shared = true)
     )
   );
 
 drop policy if exists "작품 확인 취소" on public.project_confirms;
-create policy "작품 확인 취소" on public.project_confirms for delete to authenticated
-  using (user_id = auth.uid());
+drop policy if exists "작품 추천 취소" on public.project_confirms;
+create policy "작품 추천 취소" on public.project_confirms for delete to authenticated
+  using (user_id = (select auth.uid()));
 
 create index if not exists project_confirms_project_idx on public.project_confirms (project_id);

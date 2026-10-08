@@ -11,4 +11,6 @@
 9. 공유할 결과를 선택해 등록한 뒤 **작품관 보기**로 이동합니다.
 10. 같은 작품을 다시 공유해도 카드가 늘어나지 않고 갱신되는지, 다른 브라우저에서는 관리 메뉴가 보이지 않는지 확인합니다.
 
+기존 Supabase 프로젝트에 작품 추천 기능만 추가할 때는 기존 테이블을 삭제하거나 초기화하지 말고, SQL Editor에서 `add-project-recommendations.sql`을 실행합니다. 이 스크립트는 기존 `projects` 데이터는 유지하고 추천 기록용 `project_confirms` 테이블과 접근 정책만 보완합니다.
+
 GitHub Pages에서도 상대 경로와 HTTPS CDN을 사용하므로 동일하게 동작합니다. 배포 전 Supabase의 Authentication URL 설정에서 실제 GitHub Pages 주소를 허용 URL에 추가하세요.

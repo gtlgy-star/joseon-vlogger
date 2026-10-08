@@ -966,15 +966,13 @@
         recommendButtons.forEach((button) => {
           button.classList.toggle('is-recommended', confirmed);
           button.setAttribute('aria-pressed', String(confirmed));
-          button.textContent = options.project?.is_own
-            ? `👍 내 작품 추천 ${count}`
-            : `${confirmed ? '👍 추천했어요' : '👍 추천해요'} ${count}`;
-          button.disabled = Boolean(options.project?.is_own);
-          button.title = options.project?.is_own ? '내 작품은 추천할 수 없어요.' : (confirmed ? '추천 취소' : '이 작품을 추천해요');
+          button.textContent = `${confirmed ? '👍 추천했어요' : '👍 추천해요'} ${count}`;
+          button.disabled = false;
+          button.title = confirmed ? '추천 취소' : '이 작품을 추천해요';
         });
       };
       const toggleRecommendation = async () => {
-        if (!options.project || options.project.is_own) return;
+        if (!options.project) return;
         const nextConfirmed = !options.project.confirmed_by_me;
         recommendButtons.forEach((button) => { button.disabled = true; });
         try {

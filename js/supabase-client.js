@@ -5,6 +5,8 @@
   // service_role key와 데이터베이스 비밀번호는 절대 브라우저 코드에 넣지 마세요.
   const SUPABASE_URL = 'https://wpqbzpywqvvaerxzoizw.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_XkofL_4CefvbQKiuA9C6Rg_1riGhnEX';
+  // 초기 '작품 확인' 기능의 DB 이름을 추천 기능에서도 호환 목적으로 유지합니다.
+  const RECOMMENDATIONS_TABLE = 'project_confirms';
   let client = null;
   let sessionPromise = null;
 
@@ -88,7 +90,7 @@
     if (error) throwDbError('SELECT', error);
     const rows = data || [];
     if (!rows.length) return rows;
-    const confirmed = await getClient().from('project_confirms').select('project_id,user_id').in('project_id', rows.map((project) => project.id));
+    const confirmed = await getClient().from(RECOMMENDATIONS_TABLE).select('project_id,user_id').in('project_id', rows.map((project) => project.id));
     if (confirmed.error) {
       console.warn('[JoseonSupabase] project confirmations unavailable', confirmed.error);
       return rows.map((project) => ({ ...project, confirm_count: 0, confirmed_by_me: false }));
@@ -120,10 +122,10 @@
   async function setProjectConfirmed(projectId, confirmed) {
     const session = await sessionForDb(confirmed ? 'CONFIRM' : 'UNCONFIRM');
     if (confirmed) {
-      const result = await getClient().from('project_confirms').upsert({ project_id: projectId, user_id: session.user.id }, { onConflict: 'project_id,user_id', ignoreDuplicates: true });
+      const result = await getClient().from(RECOMMENDATIONS_TABLE).upsert({ project_id: projectId, user_id: session.user.id }, { onConflict: 'project_id,user_id', ignoreDuplicates: true });
       if (result.error) throwDbError('CONFIRM', result.error);
     } else {
-      const result = await getClient().from('project_confirms').delete().eq('project_id', projectId).eq('user_id', session.user.id);
+      const result = await getClient().from(RECOMMENDATIONS_TABLE).delete().eq('project_id', projectId).eq('user_id', session.user.id);
       if (result.error) throwDbError('UNCONFIRM', result.error);
     }
     return confirmed;
