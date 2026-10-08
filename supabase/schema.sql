@@ -49,8 +49,9 @@ create index if not exists projects_class_updated_idx on public.projects (class_
 create table if not exists public.project_confirms (
   project_id uuid not null references public.projects(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
+  content_type text not null check (content_type in ('diary', 'storyboard')),
   created_at timestamptz not null default now(),
-  primary key (project_id, user_id)
+  primary key (project_id, user_id, content_type)
 );
 
 alter table public.project_confirms enable row level security;
@@ -71,7 +72,11 @@ create policy "작품 추천 추가" on public.project_confirms for insert to au
     and exists (
       select 1 from public.projects
       where projects.id = project_confirms.project_id
-        and (projects.diary_shared = true or projects.storyboard_shared = true)
+        and (
+          (project_confirms.content_type = 'diary' and projects.diary_shared = true)
+          or
+          (project_confirms.content_type = 'storyboard' and projects.storyboard_shared = true)
+        )
     )
   );
 

@@ -6,14 +6,34 @@ begin;
 create table if not exists public.project_confirms (
   project_id uuid not null references public.projects(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
+  content_type text not null check (content_type in ('diary', 'storyboard')),
   created_at timestamptz not null default now(),
-  primary key (project_id, user_id)
+  primary key (project_id, user_id, content_type)
 );
+
+-- 기존 2열 기본키 테이블을 사용하는 경우 추천 총수를 유지하면서 유형을 부여합니다.
+alter table public.project_confirms add column if not exists content_type text;
+update public.project_confirms as recommendation
+set content_type = case
+  when project.storyboard_shared = true and project.diary_shared = false then 'storyboard'
+  else 'diary'
+end
+from public.projects as project
+where project.id = recommendation.project_id
+  and recommendation.content_type is null;
+alter table public.project_confirms alter column content_type set not null;
+alter table public.project_confirms drop constraint if exists project_confirms_content_type_check;
+alter table public.project_confirms add constraint project_confirms_content_type_check
+  check (content_type in ('diary', 'storyboard'));
+alter table public.project_confirms drop constraint if exists project_confirms_pkey;
+alter table public.project_confirms add constraint project_confirms_pkey
+  primary key (project_id, user_id, content_type);
 
 comment on table public.project_confirms is
   '작품별 추천 기록. 기존 확인 기능의 테이블명을 호환성을 위해 유지한다.';
 comment on column public.project_confirms.project_id is '추천받은 작품 ID';
 comment on column public.project_confirms.user_id is '추천한 익명 또는 일반 인증 사용자 ID';
+comment on column public.project_confirms.content_type is '추천 대상: diary 또는 storyboard';
 
 alter table public.project_confirms enable row level security;
 
@@ -41,7 +61,11 @@ create policy "작품 추천 추가" on public.project_confirms
       select 1
       from public.projects
       where projects.id = project_confirms.project_id
-        and (projects.diary_shared = true or projects.storyboard_shared = true)
+        and (
+          (project_confirms.content_type = 'diary' and projects.diary_shared = true)
+          or
+          (project_confirms.content_type = 'storyboard' and projects.storyboard_shared = true)
+        )
     )
   );
 

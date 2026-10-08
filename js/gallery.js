@@ -100,8 +100,7 @@
     const displayName = String(project.display_name || '').trim();
     const groupName = /^\d+$/.test(displayName) ? `${displayName}모둠` : (displayName || '우리 모둠');
     const count = Math.max(0, Number(project.confirm_count) || 0);
-    const confirmed = Boolean(project.confirmed_by_me);
-    const confirmButton = `<button type="button" class="gallery-confirm-button${confirmed ? ' is-confirmed' : ''}" data-confirm="${esc(project.id)}" data-confirmed="${confirmed}" aria-pressed="${confirmed}" title="${confirmed ? '추천 취소' : '이 작품을 추천해요'}"><span aria-hidden="true">👍</span><small>추천</small><strong>${count}</strong></button>`;
+    const confirmButton = `<div class="gallery-confirm-button is-count" title="일기와 스토리보드 추천 수 합계"><span aria-hidden="true">👍</span><small>추천</small><strong>${count}</strong></div>`;
     const manageActions = own ? `<div class="gallery-owner-actions"><button type="button" class="gallery-edit-button" data-edit="${esc(project.id)}">수정</button><button type="button" class="gallery-delete-button" data-delete-project="${esc(project.id)}">삭제</button></div>` : '';
     return `<article class="gallery-card${own ? ' is-own' : ''}" data-project-id="${esc(project.id)}"><button class="gallery-card-poster" type="button" data-preview="${esc(project.id)}" data-preview-type="${posterType}" aria-label="${esc(project.title || '제목 없는 작품')} ${posterType === 'storyboard' ? '스토리보드' : '일기'} 미리보기">${renderThumbnail(project)}</button>${confirmButton}<div class="gallery-card-details"><h2>${esc(project.title || '제목 없는 작품')}</h2><p>${esc(groupName)}</p><div class="gallery-card-actions">${diaryAction}${storyboardAction}</div>${manageActions}</div></article>`;
   }
@@ -136,26 +135,6 @@
       } catch (_) {
         button.disabled = false;
         hooks.onNotify?.('작품을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
-      }
-    }));
-    layer().querySelectorAll('[data-confirm]').forEach((button) => button.addEventListener('click', async () => {
-      const project = projects.find((item) => item.id === button.dataset.confirm);
-      if (!project || button.disabled) return;
-      const nextConfirmed = button.dataset.confirmed !== 'true';
-      button.disabled = true;
-      try {
-        await window.JoseonSupabase.setProjectConfirmed(project.id, nextConfirmed);
-        project.confirmed_by_me = nextConfirmed;
-        project.confirm_count = Math.max(0, (Number(project.confirm_count) || 0) + (nextConfirmed ? 1 : -1));
-        button.dataset.confirmed = String(nextConfirmed);
-        button.setAttribute('aria-pressed', String(nextConfirmed));
-        button.title = nextConfirmed ? '추천 취소' : '이 작품을 추천해요';
-        button.classList.toggle('is-confirmed', nextConfirmed);
-        button.querySelector('strong').textContent = String(project.confirm_count);
-      } catch (_) {
-        hooks.onNotify?.('추천을 저장하지 못했어요.');
-      } finally {
-        button.disabled = false;
       }
     }));
     document.getElementById('gallery-more')?.addEventListener('click', () => { visibleCount += 8; renderCards(); });

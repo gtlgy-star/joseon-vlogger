@@ -90,18 +90,23 @@
     if (error) throwDbError('SELECT', error);
     const rows = data || [];
     if (!rows.length) return rows;
-    const confirmed = await getClient().from(RECOMMENDATIONS_TABLE).select('project_id,user_id').in('project_id', rows.map((project) => project.id));
+    const confirmed = await getClient().from(RECOMMENDATIONS_TABLE).select('project_id,user_id,content_type').in('project_id', rows.map((project) => project.id));
     if (confirmed.error) {
       console.warn('[JoseonSupabase] project confirmations unavailable', confirmed.error);
-      return rows.map((project) => ({ ...project, confirm_count: 0, confirmed_by_me: false }));
+      return rows.map((project) => ({ ...project, confirm_count: 0, diary_recommended_by_me: false, storyboard_recommended_by_me: false }));
     }
     const counts = new Map();
     const mine = new Set();
     (confirmed.data || []).forEach((item) => {
       counts.set(item.project_id, (counts.get(item.project_id) || 0) + 1);
-      if (item.user_id === session.user.id) mine.add(item.project_id);
+      if (item.user_id === session.user.id) mine.add(`${item.project_id}:${item.content_type}`);
     });
-    return rows.map((project) => ({ ...project, confirm_count: counts.get(project.id) || 0, confirmed_by_me: mine.has(project.id) }));
+    return rows.map((project) => ({
+      ...project,
+      confirm_count: counts.get(project.id) || 0,
+      diary_recommended_by_me: mine.has(`${project.id}:diary`),
+      storyboard_recommended_by_me: mine.has(`${project.id}:storyboard`)
+    }));
   }
 
   async function listProjectCountsByClass() {
@@ -119,16 +124,17 @@
     return counts;
   }
 
-  async function setProjectConfirmed(projectId, confirmed) {
-    const session = await sessionForDb(confirmed ? 'CONFIRM' : 'UNCONFIRM');
-    if (confirmed) {
-      const result = await getClient().from(RECOMMENDATIONS_TABLE).upsert({ project_id: projectId, user_id: session.user.id }, { onConflict: 'project_id,user_id', ignoreDuplicates: true });
+  async function setProjectRecommended(projectId, contentType, recommended) {
+    if (contentType !== 'diary' && contentType !== 'storyboard') throw new Error('INVALID_RECOMMENDATION_TYPE');
+    const session = await sessionForDb(recommended ? 'RECOMMEND' : 'UNRECOMMEND');
+    if (recommended) {
+      const result = await getClient().from(RECOMMENDATIONS_TABLE).upsert({ project_id: projectId, user_id: session.user.id, content_type: contentType }, { onConflict: 'project_id,user_id,content_type', ignoreDuplicates: true });
       if (result.error) throwDbError('CONFIRM', result.error);
     } else {
-      const result = await getClient().from(RECOMMENDATIONS_TABLE).delete().eq('project_id', projectId).eq('user_id', session.user.id);
+      const result = await getClient().from(RECOMMENDATIONS_TABLE).delete().eq('project_id', projectId).eq('user_id', session.user.id).eq('content_type', contentType);
       if (result.error) throwDbError('UNCONFIRM', result.error);
     }
-    return confirmed;
+    return recommended;
   }
 
   async function updateSharing(id, changes) {
@@ -149,5 +155,5 @@
     if (error) throwDbError('DELETE', error);
   }
 
-  window.JoseonSupabase = { isConfigured, ensureSession, currentUserId, upsertProject, listProjects, listProjectCountsByClass, setProjectConfirmed, updateSharing, deleteProject };
+  window.JoseonSupabase = { isConfigured, ensureSession, currentUserId, upsertProject, listProjects, listProjectCountsByClass, setProjectRecommended, updateSharing, deleteProject };
 })();
