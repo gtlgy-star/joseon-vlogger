@@ -2,7 +2,7 @@
   'use strict';
   const KEY = 'joseon-vlogger-mvp-v1';
   function freshState() {
-    return { version: 1, clientProjectId: '', inquiryAcknowledged: false, student: { classNo: '', groupName: '', authorName: '' }, protagonist: { name: '', status: '', gender: '' }, selectedTopics: [], topicNotes: {}, diary: { title: '', body: '' }, diaryChecks: { voice: '', culture: '', reflection: '' }, writingView: 'diary', resultView: 'diary', historicalBasis: [], evidenceNotes: {}, storyboard: window.Storyboard ? window.Storyboard.createDefault() : [], shooting: { roles: [{ id: 'role-1', role: '주인공', name: '' }, { id: 'role-2', role: '촬영 담당', name: '' }], location: '', customLocation: '', props: '', thumbnailCode: '' }, currentStep: 0, maxVisitedStep: 0, updatedAt: new Date().toISOString() };
+    return { version: 1, clientProjectId: '', shareTitle: '', shareDiary: true, shareStoryboard: true, inquiryAcknowledged: false, student: { classNo: '', groupName: '', authorName: '' }, protagonist: { name: '', status: '', gender: '' }, selectedTopics: [], topicNotes: {}, diary: { title: '', body: '' }, diaryChecks: { voice: '', culture: '', reflection: '' }, writingView: 'diary', resultView: 'diary', historicalBasis: [], evidenceNotes: {}, storyboard: window.Storyboard ? window.Storyboard.createDefault() : [], shooting: { roles: [{ id: 'role-1', role: '주인공', name: '' }, { id: 'role-2', role: '촬영 담당', name: '' }], location: '', customLocation: '', props: '', thumbnailCode: '' }, currentStep: 0, maxVisitedStep: 0, updatedAt: new Date().toISOString() };
   }
   function normalize(raw) {
     const base = freshState();

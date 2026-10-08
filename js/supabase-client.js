@@ -141,5 +141,11 @@
     return changes;
   }
 
-  window.JoseonSupabase = { isConfigured, ensureSession, currentUserId, upsertProject, listProjects, listProjectCountsByClass, setProjectConfirmed, updateSharing };
+  async function deleteProject(id) {
+    const session = await sessionForDb('DELETE');
+    const { error } = await getClient().from('projects').delete().eq('id', id).eq('owner_id', session.user.id);
+    if (error) throwDbError('DELETE', error);
+  }
+
+  window.JoseonSupabase = { isConfigured, ensureSession, currentUserId, upsertProject, listProjects, listProjectCountsByClass, setProjectConfirmed, updateSharing, deleteProject };
 })();

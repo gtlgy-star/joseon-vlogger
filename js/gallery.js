@@ -102,7 +102,8 @@
     const count = Math.max(0, Number(project.confirm_count) || 0);
     const confirmed = Boolean(project.confirmed_by_me);
     const confirmButton = `<button type="button" class="gallery-confirm-button${confirmed ? ' is-confirmed' : ''}${own ? ' is-own-count' : ''}" ${own ? 'disabled aria-disabled="true" title="내 작품의 확인 수"' : `data-confirm="${esc(project.id)}" data-confirmed="${confirmed}" aria-pressed="${confirmed}" title="${confirmed ? '확인 취소' : '이 작품을 확인했어요'}"`}><span aria-hidden="true">☝️</span><small>확인</small><strong>${count}</strong></button>`;
-    return `<article class="gallery-card${own ? ' is-own' : ''}" data-project-id="${esc(project.id)}"><button class="gallery-card-poster" type="button" data-preview="${esc(project.id)}" data-preview-type="${posterType}" aria-label="${esc(project.title || '제목 없는 작품')} ${posterType === 'storyboard' ? '스토리보드' : '일기'} 미리보기">${renderThumbnail(project)}</button>${confirmButton}<div class="gallery-card-details"><h2>${esc(project.title || '제목 없는 작품')}</h2><p>${esc(groupName)}</p><div class="gallery-card-actions">${diaryAction}${storyboardAction}</div></div></article>`;
+    const manageActions = own ? `<div class="gallery-owner-actions"><button type="button" class="gallery-edit-button" data-edit="${esc(project.id)}">수정</button><button type="button" class="gallery-delete-button" data-delete-project="${esc(project.id)}">삭제</button></div>` : '';
+    return `<article class="gallery-card${own ? ' is-own' : ''}" data-project-id="${esc(project.id)}"><button class="gallery-card-poster" type="button" data-preview="${esc(project.id)}" data-preview-type="${posterType}" aria-label="${esc(project.title || '제목 없는 작품')} ${posterType === 'storyboard' ? '스토리보드' : '일기'} 미리보기">${renderThumbnail(project)}</button>${confirmButton}<div class="gallery-card-details"><h2>${esc(project.title || '제목 없는 작품')}</h2><p>${esc(groupName)}</p><div class="gallery-card-actions">${diaryAction}${storyboardAction}</div>${manageActions}</div></article>`;
   }
 
   function renderCards() {
@@ -111,6 +112,29 @@
     layer().innerHTML = shell(projects.length ? `<div class="gallery-grid">${visibleProjects.map(card).join('')}</div>${moreButton}` : '<div class="gallery-message"><span>🖼️</span><strong>아직 공유된 작품이 없어요.</strong><p>우리 모둠의 첫 작품을 공유해 보세요!</p></div>');
     bindNavigation();
     layer().querySelectorAll('[data-preview]').forEach((button) => button.addEventListener('click', () => hooks.onPreview?.(projects.find((project) => project.id === button.dataset.preview), button.dataset.previewType)));
+    layer().querySelectorAll('[data-edit]').forEach((button) => button.addEventListener('click', () => {
+      const project = projects.find((item) => item.id === button.dataset.edit);
+      if (!project || project.owner_id !== currentUserId) return;
+      if (!window.confirm(`“${project.title || '제목 없는 작품'}”을 불러와 수정할까요?\n현재 작성 중인 내용은 이 작품의 내용으로 바뀝니다.`)) return;
+      hooks.onEdit?.(project);
+    }));
+    layer().querySelectorAll('[data-delete-project]').forEach((button) => button.addEventListener('click', async () => {
+      const project = projects.find((item) => item.id === button.dataset.deleteProject);
+      if (!project || project.owner_id !== currentUserId || button.disabled) return;
+      if (!window.confirm(`“${project.title || '제목 없는 작품'}”을 작품관에서 삭제할까요?\n삭제한 작품은 되돌릴 수 없습니다.`)) return;
+      button.disabled = true;
+      try {
+        await window.JoseonSupabase.deleteProject(project.id);
+        projects = projects.filter((item) => item.id !== project.id);
+        classCounts[activeClass] = Math.max(0, (classCounts[activeClass] || 0) - 1);
+        hooks.onDelete?.(project);
+        hooks.onNotify?.('작품을 삭제했어요.');
+        renderCards();
+      } catch (_) {
+        button.disabled = false;
+        hooks.onNotify?.('작품을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      }
+    }));
     layer().querySelectorAll('[data-confirm]').forEach((button) => button.addEventListener('click', async () => {
       const project = projects.find((item) => item.id === button.dataset.confirm);
       if (!project || button.disabled) return;

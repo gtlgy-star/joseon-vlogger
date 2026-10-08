@@ -397,19 +397,19 @@
     return state.diary.title.trim() || storyboardTitle || `${state.protagonist.name || '주인공'}의 하루`;
   }
   function createShareSnapshot() {
-    return JSON.parse(JSON.stringify({ version: 1, student: state.student, protagonist: state.protagonist, selectedTopics: state.selectedTopics, topicNotes: state.topicNotes, diary: state.diary, storyboard: state.storyboard, historicalBasis: state.historicalBasis, evidenceNotes: state.evidenceNotes, thumbnail: state.shooting.thumbnailCode || '' }));
+    return JSON.parse(JSON.stringify({ version: 1, shareTitle: state.shareTitle || '', shareDiary: state.shareDiary !== false, shareStoryboard: state.shareStoryboard !== false, student: state.student, protagonist: state.protagonist, selectedTopics: state.selectedTopics, topicNotes: state.topicNotes, diary: state.diary, storyboard: state.storyboard, historicalBasis: state.historicalBasis, evidenceNotes: state.evidenceNotes, thumbnail: state.shooting.thumbnailCode || '' }));
   }
   function openShareDialog() {
     const dialog = document.getElementById('share-dialog');
-    document.getElementById('share-title').value = defaultShareTitle();
+    document.getElementById('share-title').value = state.shareTitle || defaultShareTitle();
     document.getElementById('share-group-summary').textContent = `${state.student.classNo || '-'}반 · ${state.student.groupName || '모둠 이름 없음'}`;
     document.getElementById('share-error').textContent = '';
     document.getElementById('share-success').hidden = true;
     document.getElementById('share-cancel').textContent = '취소';
     const submit = document.getElementById('share-submit');
     submit.textContent = '우리 반 작품관에 공유하기'; submit.dataset.completed = ''; submit.disabled = false;
-    document.getElementById('share-diary-check').checked = true;
-    document.getElementById('share-storyboard-check').checked = true;
+    document.getElementById('share-diary-check').checked = state.shareDiary !== false;
+    document.getElementById('share-storyboard-check').checked = state.shareStoryboard !== false;
     dialog.showModal();
   }
   async function submitShare() {
@@ -424,6 +424,7 @@
     if (!title) { errorBox.textContent = '작품 제목을 입력해 주세요.'; return; }
     if (!window.JoseonSupabase?.isConfigured()) { errorBox.textContent = 'Supabase 연결 정보가 아직 설정되지 않았어요. supabase/README.md를 확인해 주세요.'; return; }
     if (!state.clientProjectId) { state.clientProjectId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`; save(); }
+    state.shareTitle = title; state.shareDiary = diaryShared; state.shareStoryboard = storyboardShared; save();
     submit.disabled = true; submit.textContent = '작품을 등록하고 있어요…'; errorBox.textContent = '';
     try {
       await window.JoseonSupabase.upsertProject({ client_project_id: state.clientProjectId, grade: 5, class_number: Number(state.student.classNo), group_number: Number((state.student.groupName.match(/\d+/) || [])[0]) || null, display_name: state.student.groupName || state.student.authorName || '우리 모둠', title, social_status: findStatus()?.label || state.protagonist.status || '', thumbnail: state.shooting.thumbnailCode || '', snapshot: createShareSnapshot(), diary_shared: diaryShared, storyboard_shared: storyboardShared });
@@ -453,6 +454,39 @@
       readOnlyPreview = false;
       window.JoseonGallery?.open(Number(state.student.classNo) || Number(project.class_number) || 1, type);
     } });
+  }
+  function editSharedProject(project) {
+    if (!project?.snapshot || !project.client_project_id) return;
+    window.PreviewPlayer.destroy();
+    if (diaryPreviewCleanup) diaryPreviewCleanup();
+    state = window.JoseonStorage.normalize({
+      ...project.snapshot,
+      clientProjectId: project.client_project_id,
+      shareTitle: project.title || project.snapshot.shareTitle || '',
+      shareDiary: project.diary_shared,
+      shareStoryboard: project.storyboard_shared,
+      inquiryAcknowledged: true,
+      currentStep: 4,
+      maxVisitedStep: Math.max(4, Number(project.snapshot.maxVisitedStep) || 0),
+      writingView: project.storyboard_shared && !project.diary_shared ? 'storyboard' : 'diary',
+      resultView: project.storyboard_shared && !project.diary_shared ? 'storyboard' : 'diary',
+      shooting: { thumbnailCode: project.thumbnail || project.snapshot.thumbnail || '' }
+    });
+    readOnlyPreview = false;
+    preservedWorkingState = null;
+    document.body.classList.remove('shared-preview-open');
+    window.JoseonGallery?.close();
+    save();
+    render();
+    notify('작품을 불러왔어요. 수정한 뒤 다시 공유하면 기존 작품이 갱신됩니다.');
+  }
+  function handleDeletedProject(project) {
+    if (state.clientProjectId !== project?.client_project_id) return;
+    state.clientProjectId = '';
+    state.shareTitle = '';
+    state.shareDiary = true;
+    state.shareStoryboard = true;
+    save();
   }
   function renderPreview(options = {}) {
     const slides = previewSlides();
@@ -1069,7 +1103,7 @@
   const syncShareButton = () => { document.getElementById('share-submit').disabled = !document.getElementById('share-diary-check').checked && !document.getElementById('share-storyboard-check').checked; };
   document.getElementById('share-diary-check').addEventListener('change', syncShareButton);
   document.getElementById('share-storyboard-check').addEventListener('change', syncShareButton);
-  window.JoseonGallery?.init({ getCurrentClass: () => Number(state.student.classNo) || 1, onPreview: openSharedProject, onNotify: notify });
+  window.JoseonGallery?.init({ getCurrentClass: () => Number(state.student.classNo) || 1, onPreview: openSharedProject, onEdit: editSharedProject, onDelete: handleDeletedProject, onNotify: notify });
   document.getElementById('gallery-open').addEventListener('click', () => window.JoseonGallery?.open(Number(state.student.classNo) || 1, 'diary'));
   render();
 })();
